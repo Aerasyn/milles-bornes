@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Milles Bornes</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen">
+      <div class="container">
+        <h1>Milles Bornes</h1>
+        <div class="form-group">
+          <label for="player-name">Your Name:</label>
+          <input type="text" id="player-name" placeholder="Enter your name">
+        </div>
+        <div class="form-group">
+          <label for="server-url">Server URL:</label>
+          <div class="custom-dropdown">
+            <input type="text" id="server-url" value="http://millesbornes.ddns.net:3000">
+            <div class="dropdown-content">
+              <div class="dropdown-item" data-value="http://millesbornes.ddns.net:3000">Milles Bornes Server (millesbornes.ddns.net)</div>
+            </div>
+          </div>
+        </div>
+        <button id="login-btn" class="btn">Enter Lobby</button>
+        <div id="login-error" class="error-message"></div>
+      </div>
+    </div>
+
+    <!-- Lobby Screen -->
+    <div id="lobby-screen" class="screen hidden">
+      <div class="lobby-container">
+        <div class="lobby-header">
+          <h1>Game Lobby</h1>
+          <div class="user-info">
+            <span>Logged in as: </span>
+            <span id="current-user"></span>
+          </div>
+        </div>
+
+        <div class="lobby-content">
+          <div class="lobby-left-panel">
+            <div class="online-users-container">
+              <h2>Online Players</h2>
+              <ul id="online-users-list"></ul>
+            </div>
+
+            <div class="games-list-container">
+              <h2>Active Games</h2>
+              <ul id="games-list"></ul>
+              <div class="game-input-container">
+                <input type="text" id="new-game-id" placeholder="Enter game name">
+              </div>
+              <div class="game-controls">
+                <button id="create-game-btn" class="btn">Create Game</button>
+                <button id="refresh-games-btn" class="btn">Refresh</button>
+                <button id="clean-games-btn" class="btn">Clean Games</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="lobby-right-panel">
+            <div class="chat-container">
+              <div class="chat-header">
+                <h2>Chat</h2>
+                <button id="clear-chat-btn" class="btn btn-small">Clear Chat</button>
+              </div>
+              <div id="chat-messages" class="chat-messages"></div>
+              <div class="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Type a message...">
+                <button id="send-chat-btn" class="btn">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Waiting Screen -->
+    <div id="waiting-screen" class="screen hidden">
+      <div class="container">
+        <h2>Waiting for Opponent</h2>
+        <p>Game ID: <span id="waiting-game-id"></span></p>
+        <p>Share this ID with your opponent to join the game.</p>
+        <div class="loader"></div>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="screen hidden">
+      <div class="game-container">
+        <!-- Opponent Area -->
+        <div id="opponent-area" class="player-area">
+          <div class="player-info">
+            <div class="name-container">
+              <h3 id="opponent-name">Opponent</h3>
+              <div id="opponent-turn-indicator" class="turn-indicator">Current Turn</div>
+            </div>
+            <div class="player-stats">
+              <span id="opponent-cards">Cards: 0</span>
+            </div>
+          </div>
+          <div class="battle-area">
+            <div class="distance-pile">
+              <h4>Distance</h4>
+              <div id="opponent-distance" class="distance-value">0</div>
+            </div>
+            <div class="safety-cards" id="opponent-safeties"></div>
+            <div class="hazard-card" id="opponent-hazard"></div>
+            <div class="speed-limit" id="opponent-speed-limit"></div>
+          </div>
+        </div>
+
+        <!-- Game Menu -->
+        <div id="game-menu">
+          <div class="menu-options">
+            <label class="toggle-option">
+              <input type="checkbox" id="show-card-text">
+              <span>Show Card Text</span>
+            </label>
+            <label class="toggle-option">
+              <input type="checkbox" id="enable-sound" checked>
+              <span>Sound Effects</span>
+            </label>
+            <button id="rules-btn" class="menu-btn">Rules</button>
+            <button id="cards-btn" class="menu-btn">Cards</button>
+            <button id="debug-btn" class="menu-btn">Debug</button>
+          </div>
+        </div>
+
+        <!-- Rules Modal -->
+        <div id="rules-modal" class="modal hidden">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h2>Milles Bornes Rules</h2>
+              <span class="close-rules-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+              <h3>Objective</h3>
+              <p>Be the first player to travel 1,000 miles by playing distance cards while overcoming hazards played by your opponent.</p>
+
+              <h3>Card Types</h3>
+              <h4>Distance Cards</h4>
+              <p>Play these on your turn to advance toward the 1,000-mile goal:</p>
+              <ul>
+                <li><strong>25 Miles</strong> - Adds 25 miles to your distance</li>
+                <li><strong>50 Miles</strong> - Adds 50 miles to your distance</li>
+                <li><strong>75 Miles</strong> - Adds 75 miles to your distance</li>
+                <li><strong>100 Miles</strong> - Adds 100 miles to your distance</li>
+                <li><strong>200 Miles</strong> - Adds 200 miles to your distance (cannot be played under Speed Limit)</li>
+              </ul>
+
+              <h4>Hazard Cards</h4>
+              <p>Play these on your opponent to stop their progress:</p>
+              <ul>
+                <li><strong>Accident</strong> - Stops opponent until they play Repairs</li>
+                <li><strong>Out of Gas</strong> - Stops opponent until they play Gasoline</li>
+                <li><strong>Flat Tire</strong> - Stops opponent until they play Spare Tire</li>
+                <li><strong>Speed Limit</strong> - Limits opponent to playing only 25 and 50 mile cards</li>
+                <li><strong>Stop</strong> - Stops opponent until they play Go</li>
+              </ul>
+
+              <h4>Remedy Cards</h4>
+              <p>Play these to counter hazards played against you:</p>
+              <ul>
+                <li><strong>Repairs</strong> - Counters Accident</li>
+                <li><strong>Gasoline</strong> - Counters Out of Gas</li>
+                <li><strong>Spare Tire</strong> - Counters Flat Tire</li>
+                <li><strong>End of Speed Limit</strong> - Counters Speed Limit</li>
+                <li><strong>Go</strong> - Counters Stop</li>
+              </ul>
+
+              <h4>Safety Cards</h4>
+              <p>Play these to protect against specific hazards for the rest of the game:</p>
+              <ul>
+                <li><strong>Driving Ace</strong> - Protects against Accident</li>
+                <li><strong>Fuel Tank</strong> - Protects against Out of Gas</li>
+                <li><strong>Puncture-Proof</strong> - Protects against Flat Tire</li>
+                <li><strong>Right of Way</strong> - Protects against Stop and Speed Limit</li>
+              </ul>
+
+              <h3>Game Play</h3>
+              <ol>
+                <li>Each player starts with 6 cards.</li>
+                <li>On your turn, you must either play a card or draw a card.</li>
+                <li>Players begin the game with a 'Stop' hazard and must play a 'Go' card before playing any distance cards.</li>
+                <li>You can only play distance cards if you are not affected by a hazard.</li>
+                <li>You can only play one distance card per turn.</li>
+                <li>When you play a Safety card, you get another turn.</li>
+                <li>The first player to reach exactly 1,000 miles wins.</li>
+              </ol>
+
+              <h3>Special Rules</h3>
+              <p><strong>Coup Fourré:</strong> If your opponent plays a hazard against you and you have the matching Safety card in your hand, you can immediately play it (even if it's not your turn). This gives you an extra turn.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Info -->
+        <div id="game-info">
+          <div class="deck-area">
+            <div id="deck" class="card card-back">
+              <span id="deck-count">0</span>
+            </div>
+            <div id="discard-pile" class="card">
+              <span id="discard-count">0</span>
+            </div>
+          </div>
+          <div id="game-status">Waiting for game to start...</div>
+        </div>
+
+        <!-- Player Area -->
+        <div id="player-area" class="player-area">
+          <div class="player-info">
+            <div class="name-container">
+              <h3 id="player-name">You</h3>
+              <div id="player-turn-indicator" class="turn-indicator">Current Turn</div>
+            </div>
+            <div class="player-stats">
+              <span id="player-cards">Cards: 0</span>
+            </div>
+          </div>
+          <div class="battle-area">
+            <div class="distance-pile">
+              <h4>Distance</h4>
+              <div id="player-distance" class="distance-value">0</div>
+            </div>
+            <div class="safety-cards" id="player-safeties"></div>
+            <div class="hazard-card" id="player-hazard"></div>
+            <div class="speed-limit" id="player-speed-limit"></div>
+          </div>
+          <div id="player-hand" class="hand"></div>
+          <div class="action-buttons">
+            <button id="draw-btn" class="btn" disabled>Draw Card</button>
+            <button id="debug-btn" class="btn hidden">Debug: Request Hand</button>
+            <button id="exit-game-btn" class="btn exit-btn">Exit Game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen hidden">
+      <div class="container">
+        <h2>Game Over</h2>
+        <p id="winner-text"></p>
+        <button id="new-game-btn" class="btn">New Game</button>
+      </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div id="error-modal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h3>Error</h3>
+        <p id="error-message"></p>
+      </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="message-modal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-message-btn close-btn">&times;</span>
+        <h3>Message</h3>
+        <p id="message-text"></p>
+        <button id="message-ok-btn" class="btn">OK</button>
+      </div>
+    </div>
+
+    <!-- Discard Modal -->
+    <div id="discard-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Discard a Card</h3>
+        </div>
+        <div class="modal-body">
+          <p>Your hand is full. You must discard a card before drawing.</p>
+          <div id="discard-cards" class="discard-cards-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exit Confirmation Modal -->
+    <div id="exit-confirm-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Exit Game</h3>
+          <span class="close-exit-btn">&times;</span>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to exit this game?</p>
+          <p class="warning-text">This will affect the other player and end the current game.</p>
+          <div class="modal-buttons">
+            <button id="exit-cancel-btn" class="btn">Cancel</button>
+            <button id="exit-confirm-btn" class="btn exit-btn">Exit Game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards Guide Modal -->
+    <div id="cards-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Milles Bornes Cards Guide</h2>
+          <span class="close-cards-btn">&times;</span>
+        </div>
+        <div class="modal-body">
+          <h3>Distance Cards</h3>
+          <div class="cards-grid">
+            <div class="card-guide-item">
+              <div class="card card-distance" data-value="25"></div>
+              <div class="card-guide-desc">
+                <h4>25 Miles</h4>
+                <p>Adds 25 miles to your distance.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-distance" data-value="50"></div>
+              <div class="card-guide-desc">
+                <h4>50 Miles</h4>
+                <p>Adds 50 miles to your distance.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-distance" data-value="75"></div>
+              <div class="card-guide-desc">
+                <h4>75 Miles</h4>
+                <p>Adds 75 miles to your distance.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-distance" data-value="100"></div>
+              <div class="card-guide-desc">
+                <h4>100 Miles</h4>
+                <p>Adds 100 miles to your distance.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-distance" data-value="200"></div>
+              <div class="card-guide-desc">
+                <h4>200 Miles</h4>
+                <p>Adds 200 miles to your distance. Cannot be played under Speed Limit.</p>
+              </div>
+            </div>
+          </div>
+
+          <h3>Hazard Cards</h3>
+          <div class="cards-grid">
+            <div class="card-guide-item">
+              <div class="card card-hazard" data-name="Accident"></div>
+              <div class="card-guide-desc">
+                <h4>Accident</h4>
+                <p>Stops opponent's movement until they play Repairs.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-hazard" data-name="Out of Gas"></div>
+              <div class="card-guide-desc">
+                <h4>Out of Gas</h4>
+                <p>Stops opponent's movement until they play Gasoline.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-hazard" data-name="Flat Tire"></div>
+              <div class="card-guide-desc">
+                <h4>Flat Tire</h4>
+                <p>Stops opponent's movement until they play Spare Tire.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-hazard" data-name="Speed Limit"></div>
+              <div class="card-guide-desc">
+                <h4>Speed Limit</h4>
+                <p>Limits opponent to playing only 25 and 50 mile cards until they play End of Speed Limit.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-hazard" data-name="Stop"></div>
+              <div class="card-guide-desc">
+                <h4>Stop</h4>
+                <p>Stops opponent's movement until they play Go.</p>
+              </div>
+            </div>
+          </div>
+
+          <h3>Remedy Cards</h3>
+          <div class="cards-grid">
+            <div class="card-guide-item">
+              <div class="card card-remedy" data-name="Repairs"></div>
+              <div class="card-guide-desc">
+                <h4>Repairs</h4>
+                <p>Removes an Accident hazard, allowing you to move again.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-remedy" data-name="Gasoline"></div>
+              <div class="card-guide-desc">
+                <h4>Gasoline</h4>
+                <p>Removes an Out of Gas hazard, allowing you to move again.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-remedy" data-name="Spare Tire"></div>
+              <div class="card-guide-desc">
+                <h4>Spare Tire</h4>
+                <p>Removes a Flat Tire hazard, allowing you to move again.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-remedy" data-name="End of Speed Limit"></div>
+              <div class="card-guide-desc">
+                <h4>End of Speed Limit</h4>
+                <p>Removes a Speed Limit, allowing you to play any distance card.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-remedy" data-name="Go"></div>
+              <div class="card-guide-desc">
+                <h4>Go</h4>
+                <p>Removes a Stop hazard, allowing you to move again.</p>
+              </div>
+            </div>
+          </div>
+
+          <h3>Safety Cards</h3>
+          <div class="cards-grid">
+            <div class="card-guide-item">
+              <div class="card card-safety" data-name="Driving Ace"></div>
+              <div class="card-guide-desc">
+                <h4>Driving Ace</h4>
+                <p>Protects against Accident hazards for the rest of the game.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-safety" data-name="Fuel Tank"></div>
+              <div class="card-guide-desc">
+                <h4>Fuel Tank</h4>
+                <p>Protects against Out of Gas hazards for the rest of the game.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-safety" data-name="Puncture-Proof"></div>
+              <div class="card-guide-desc">
+                <h4>Puncture-Proof</h4>
+                <p>Protects against Flat Tire hazards for the rest of the game.</p>
+              </div>
+            </div>
+            <div class="card-guide-item">
+              <div class="card card-safety" data-name="Right of Way"></div>
+              <div class="card-guide-desc">
+                <h4>Right of Way</h4>
+                <p>Protects against Stop and Speed Limit hazards for the rest of the game.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/socket.io.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/audio-manager.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/lobby.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

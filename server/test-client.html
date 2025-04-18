@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Milles Bornes Server Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      border-radius: 5px;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+    }
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+    input, button {
+      padding: 8px;
+      margin: 5px 0;
+    }
+    input {
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Milles Bornes Server Test</h1>
+  <div class="container">
+    <h2>Test Server Connection</h2>
+    <p>Enter the server URL to test:</p>
+    <input type="text" id="serverUrl" placeholder="http://76.127.102.184:3000" value="http://76.127.102.184:3000">
+    <button id="testBtn">Test Connection</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById('testBtn').addEventListener('click', async () => {
+      const serverUrl = document.getElementById('serverUrl').value;
+      const resultDiv = document.getElementById('result');
+      
+      resultDiv.innerHTML = '<p>Testing connection...</p>';
+      
+      try {
+        const response = await fetch(`${serverUrl}/api/status`);
+        if (response.ok) {
+          const data = await response.json();
+          resultDiv.innerHTML = `
+            <p class="success">✅ Connection successful!</p>
+            <p>Server status: ${data.status}</p>
+            <p>Active games: ${data.activeGames}</p>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <p class="error">❌ Connection failed with status: ${response.status}</p>
+            <p>The server is reachable but returned an error.</p>
+          `;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <p class="error">❌ Connection failed</p>
+          <p>Error: ${error.message}</p>
+          <p>Possible reasons:</p>
+          <ul>
+            <li>The server is not running</li>
+            <li>The IP address or port is incorrect</li>
+            <li>Port 3000 is not forwarded on the router</li>
+            <li>A firewall is blocking the connection</li>
+            <li>CORS policy is preventing the connection</li>
+          </ul>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
