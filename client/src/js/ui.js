@@ -59,6 +59,8 @@ class GameUI {
     // Discard modal
     this.discardModal = document.getElementById('discard-modal');
     this.discardCardsContainer = document.getElementById('discard-cards');
+    this.closeDiscardBtn = document.querySelector('.close-discard-btn');
+    this.discardCancelBtn = document.getElementById('discard-cancel-btn');
 
     // Exit game elements
     this.exitGameBtn = document.getElementById('exit-game-btn');
@@ -291,6 +293,12 @@ class GameUI {
   // Hide message modal
   hideMessageModal() {
     this.messageModal.classList.add('hidden');
+
+    // Hide the card exchange container
+    const cardExchangeContainer = document.getElementById('card-exchange-container');
+    if (cardExchangeContainer) {
+      cardExchangeContainer.classList.add('hidden');
+    }
 
     // If there's a pending element to focus, focus it
     if (this.pendingFocusElementId) {
@@ -764,28 +772,16 @@ class GameUI {
       cardsContainer.classList.add('hide-card-text');
     }
 
-    // Add each card to the discard modal
+    // Add each card to the container
     hand.forEach((card, index) => {
       const cardEl = document.createElement('div');
-      cardEl.className = `card card-${card.type} discard-card`;
-      cardEl.dataset.type = card.type;
-
+      cardEl.className = `card card-${card.type}`;
+      
+      // Set data attributes for styling
       if (card.type === CardType.DISTANCE) {
         cardEl.dataset.value = card.value;
-        cardEl.dataset.name = card.value + ' Miles';
       } else {
         cardEl.dataset.name = card.name;
-      }
-
-      // Add card image or styling based on type
-      if (card.type === CardType.DISTANCE) {
-        cardEl.classList.add(`card-distance-${card.value}`);
-      } else if (card.type === CardType.HAZARD) {
-        cardEl.classList.add(`card-hazard-${card.name.toLowerCase().replace(/\s+/g, '')}`);
-      } else if (card.type === CardType.REMEDY) {
-        cardEl.classList.add(`card-remedy-${card.name.toLowerCase().replace(/\s+/g, '')}`);
-      } else if (card.type === CardType.SAFETY) {
-        cardEl.classList.add(`card-safety-${card.name.toLowerCase().replace(/\s+/g, '')}`);
       }
 
       // Add text overlay
@@ -833,6 +829,18 @@ class GameUI {
       showCardTextCheckbox.addEventListener('change', this.textToggleListener);
     }
 
+    // Set up cancel button functionality
+    const cancelClickHandler = () => {
+      this.hideDiscardModal();
+    };
+    
+    // Store the handlers so we can remove them when the modal is closed
+    this.cancelClickHandler = cancelClickHandler;
+    
+    // Add event listeners for cancel buttons
+    this.closeDiscardBtn.addEventListener('click', this.cancelClickHandler);
+    this.discardCancelBtn.addEventListener('click', this.cancelClickHandler);
+
     // Show the modal
     this.discardModal.classList.remove('hidden');
   }
@@ -840,6 +848,13 @@ class GameUI {
   // Hide discard modal
   hideDiscardModal() {
     this.discardModal.classList.add('hidden');
+
+    // Remove the event listeners
+    if (this.cancelClickHandler) {
+      this.closeDiscardBtn.removeEventListener('click', this.cancelClickHandler);
+      this.discardCancelBtn.removeEventListener('click', this.cancelClickHandler);
+      this.cancelClickHandler = null;
+    }
 
     // Remove the event listener for the text toggle if it exists
     if (this.textToggleListener) {
@@ -879,8 +894,66 @@ class GameUI {
       drawnName = drawnCard.name;
     }
 
-    // Show message
-    this.showMessageModal(`You discarded ${discardName} and drew ${drawnName}.`);
+    // Show text message
+    this.messageTextEl.textContent = `You discarded ${discardName} and drew ${drawnName}.`;
+  
+    // Get the card display containers
+    const cardExchangeContainer = document.getElementById('card-exchange-container');
+    const discardedCardDisplay = document.getElementById('discarded-card-display');
+    const drawnCardDisplay = document.getElementById('drawn-card-display');
+  
+    // Clear previous card displays
+    discardedCardDisplay.innerHTML = '';
+    drawnCardDisplay.innerHTML = '';
+  
+    // Create and display the discarded card
+    discardedCardDisplay.className = 'card';
+    if (discardedCard.type === 'distance') {
+      discardedCardDisplay.classList.add('card-distance');
+      discardedCardDisplay.dataset.value = discardedCard.value;
+    
+      const valueEl = document.createElement('div');
+      valueEl.className = 'card-value';
+      valueEl.textContent = discardedCard.value;
+      discardedCardDisplay.appendChild(valueEl);
+    } else {
+      discardedCardDisplay.classList.add(`card-${discardedCard.type.toLowerCase()}`);
+      discardedCardDisplay.dataset.name = discardedCard.name;
+    
+      const nameEl = document.createElement('div');
+      nameEl.className = 'card-name';
+      nameEl.textContent = discardedCard.name;
+      discardedCardDisplay.appendChild(nameEl);
+    }
+  
+    // Create and display the drawn card
+    drawnCardDisplay.className = 'card';
+    if (drawnCard.type === 'distance') {
+      drawnCardDisplay.classList.add('card-distance');
+      drawnCardDisplay.dataset.value = drawnCard.value;
+    
+      const valueEl = document.createElement('div');
+      valueEl.className = 'card-value';
+      valueEl.textContent = drawnCard.value;
+      drawnCardDisplay.appendChild(valueEl);
+    } else {
+      drawnCardDisplay.classList.add(`card-${drawnCard.type.toLowerCase()}`);
+      drawnCardDisplay.dataset.name = drawnCard.name;
+    
+      const nameEl = document.createElement('div');
+      nameEl.className = 'card-name';
+      nameEl.textContent = drawnCard.name;
+      drawnCardDisplay.appendChild(nameEl);
+    }
+  
+    // Show the card exchange container
+    cardExchangeContainer.classList.remove('hidden');
+  
+    // Show the message modal
+    this.messageModal.classList.remove('hidden');
+  
+    // Store the ID of the element to focus after closing the modal
+    this.pendingFocusElementId = null;
   }
 
   // Set exit game button handler

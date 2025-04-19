@@ -50,6 +50,9 @@ class Game {
     this.started = false;
     this.winner = null;
     this.pendingCoupFourre = null; // For Coup Fourré rule
+    this.gamePreferences = {
+      excludeSafetyCardsFromReshuffle: true // Default to excluding safety cards
+    };
 
     // Initialize the deck
     this.initializeDeck();
@@ -135,10 +138,26 @@ class Game {
       if (this.discardPile.length === 0) {
         throw new Error('No cards left in the game');
       }
-
-      this.deck = [...this.discardPile];
-      this.discardPile = [];
+      
+      // Check if we should exclude safety cards from reshuffling
+      if (this.gamePreferences.excludeSafetyCardsFromReshuffle) {
+        console.log('Excluding safety cards from reshuffling');
+        // Filter out safety cards from the discard pile
+        const safetyCards = this.discardPile.filter(card => card.type === CardType.SAFETY);
+        const nonSafetyCards = this.discardPile.filter(card => card.type !== CardType.SAFETY);
+        
+        // Only reshuffle non-safety cards
+        this.deck = [...nonSafetyCards];
+        // Keep safety cards in the discard pile
+        this.discardPile = [...safetyCards];
+      } else {
+        // Reshuffle all cards
+        this.deck = [...this.discardPile];
+        this.discardPile = [];
+      }
+      
       this.shuffleDeck();
+      console.log(`Reshuffled deck. New deck size: ${this.deck.length}, Discard pile size: ${this.discardPile.length}`);
     }
 
     return this.deck.pop();
@@ -241,9 +260,12 @@ class Game {
     // Apply the card effect
     this.applyCardEffect(player, targetPlayer, card);
 
-    // Tag 200-mile cards with the player who played them
-    if (card.type === CardType.DISTANCE && card.value === 200) {
-      card.playedBy = player.id;
+    // Only tag distance cards with the player who played them
+    if (card.type === CardType.DISTANCE) {
+      // Only tag 200-mile cards
+      if (card.value === 200) {
+        card.playedBy = player.id;
+      }
     }
     // Add the card to the discard pile
     this.discardPile.push(card);
@@ -538,6 +560,16 @@ class Game {
     }
 
     return player.hand;
+  }
+
+  // Set game preferences
+  setGamePreferences(preferences) {
+    console.log('Setting game preferences:', preferences);
+    if (preferences.excludeSafetyCardsFromReshuffle !== undefined) {
+      this.gamePreferences.excludeSafetyCardsFromReshuffle = preferences.excludeSafetyCardsFromReshuffle;
+      console.log(`Updated excludeSafetyCardsFromReshuffle to: ${this.gamePreferences.excludeSafetyCardsFromReshuffle}`);
+    }
+    return this.gamePreferences;
   }
 }
 

@@ -266,6 +266,16 @@
         <span class="close-message-btn close-btn">&times;</span>
         <h3>Message</h3>
         <p id="message-text"></p>
+        <div id="card-exchange-container" class="card-exchange-container hidden">
+          <div class="card-exchange-item">
+            <h4>Discarded:</h4>
+            <div id="discarded-card-display" class="card"></div>
+          </div>
+          <div class="card-exchange-item">
+            <h4>Drawn:</h4>
+            <div id="drawn-card-display" class="card"></div>
+          </div>
+        </div>
         <button id="message-ok-btn" class="btn">OK</button>
       </div>
     </div>
@@ -275,10 +285,14 @@
       <div class="modal-content">
         <div class="modal-header">
           <h3>Discard a Card</h3>
+          <span class="close-discard-btn">&times;</span>
         </div>
         <div class="modal-body">
           <p>Your hand is full. You must discard a card before drawing.</p>
           <div id="discard-cards" class="discard-cards-container"></div>
+          <div class="modal-buttons">
+            <button id="discard-cancel-btn" class="btn">Cancel</button>
+          </div>
         </div>
       </div>
     </div>

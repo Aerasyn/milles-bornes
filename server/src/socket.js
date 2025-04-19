@@ -426,6 +426,28 @@ function setupSocketHandlers(io, games) {
       }
     });
 
+    // Handle game preferences
+    socket.on('setGamePreferences', ({ gameId, preferences }) => {
+      console.log(`Received setGamePreferences for game: ${gameId}`, preferences);
+      
+      if (!games.has(gameId)) {
+        socket.emit('gameError', 'Game not found');
+        return;
+      }
+      
+      const game = games.get(gameId);
+      try {
+        // Set the game preferences
+        const updatedPreferences = game.setGamePreferences(preferences);
+        console.log(`Updated game preferences for ${gameId}:`, updatedPreferences);
+        
+        // Optionally notify all players about the preference change
+        io.to(gameId).emit('gamePreferencesUpdated', updatedPreferences);
+      } catch (error) {
+        socket.emit('gameError', error.message);
+      }
+    });
+    
     // Handle player requesting their hand - supports multiple formats
     socket.on('getHand', function(data) {
       console.log('getHand request received:', data);
